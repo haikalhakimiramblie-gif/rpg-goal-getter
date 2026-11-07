@@ -1,0 +1,1 @@
+ALTER TABLE user_stats ADD COLUMN total_gold_earned INT DEFAULT 0 AFTER total_exp_earned;

@@ -1,0 +1,1 @@
+ALTER TABLE goals ADD COLUMN pending_attacks INT DEFAULT 0;

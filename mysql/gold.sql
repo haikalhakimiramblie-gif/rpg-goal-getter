@@ -1,0 +1,2 @@
+ALTER TABLE goals ADD COLUMN gold_reward INT DEFAULT 0 AFTER exp_reward;
+ALTER TABLE users ADD COLUMN gold INT DEFAULT 0 AFTER current_hp;

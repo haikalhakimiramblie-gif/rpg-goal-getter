@@ -1,0 +1,1 @@
+ALTER TABLE goal_logs ADD COLUMN feedback TEXT AFTER completion_time;

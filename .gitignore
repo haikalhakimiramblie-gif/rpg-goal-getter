@@ -1,0 +1,9 @@
+# Local database settings and private database export
+/config.php
+/rpg_goal_getter (1).sql
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db

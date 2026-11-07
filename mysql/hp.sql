@@ -1,0 +1,3 @@
+ALTER TABLE users 
+ADD COLUMN max_hp INT DEFAULT 100 AFTER exp_needed,
+ADD COLUMN current_hp INT DEFAULT 100 AFTER max_hp;

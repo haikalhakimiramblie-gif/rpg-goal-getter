@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Goal Getter - Premium Daily Goal Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:wght@400;500;600&family=MedievalSharp&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Base Styles */
+        :root {
+            --bg-primary: #0a050a;
+            --bg-secondary: #1a0f1a;
+            --accent-gold: #d4af37;
+            --accent-gold-light: #f0e68c;
+            --accent-gold-dark: #8b6914;
+            --text-primary: #e6d6b3;
+            --text-secondary: #b8860b;
+            --text-dark: #2c1810;
+            --text-light: #fff8dc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            position: fixed;
+            width: 32px;
+            height: 32px;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path fill="%23d4af37" d="M16 2L2 16l14 14 14-14L16 2zm0 4l10 10-10 10L6 16 16 6z"/></svg>') center/contain no-repeat;
+        }
+
+        .cursor-follower {
+            position: fixed;
+            width: 16px;
+            height: 16px;
+            background: rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.15s ease;
+        }
+
+        .cursor.clicked {
+            animation: cursorClick 0.3s ease;
+        }
+
+        @keyframes cursorClick {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.8); }
+            100% { transform: scale(1); }
+        }
+
+        /* Click Animation */
+        .click-effect {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 9997;
+            background: radial-gradient(circle, var(--accent-gold) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: clickRipple 0.6s ease-out forwards;
+        }
+
+        @keyframes clickRipple {
+            0% {
+                transform: scale(0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        body {
+            background: radial-gradient(ellipse at top, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+            font-family: 'EB Garamond', serif;
+            transition: background 2s ease;
+            cursor: none;
+        }
+
+        body.day-mode {
+            background: radial-gradient(ellipse at top, #4682B4 0%, #87CEEB 100%);
+        }
+
+        /* Forest Background with Scroll Animation */
+        .forest-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            background: url('images/forest.png') center/cover no-repeat;
+            opacity: 0;
+            transform: scale(1.2);
+            transition: opacity 1.5s ease, transform 2s ease;
+        }
+
+        .forest-background.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        body.day-mode .forest-background {
+            opacity: 0;
+            transform: scale(1.2);
+        }
+
+        /* Trees Container */
+        .trees-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .tree {
+            position: absolute;
+            background: url('images/tree.png') center/contain no-repeat;
+            bottom: 0;
+            transform-origin: bottom center;
+            transition: transform 0.1s linear, opacity 0.5s ease;
+            opacity: 0;
+        }
+
+        body.day-mode .tree {
+            opacity: 1;
+        }
+
+        /* Celestial Elements */
+        .celestial-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .moon, .sun {
+            position: absolute;
+            transition: all 2s ease;
+        }
+
+        .moon {
+            width: 80px;
+            height: 80px;
+            background: url('images/moon.png') center/contain no-repeat;
+            top: 10%;
+            right: 10%;
+            opacity: 1;
+            animation: moonFloat 12s ease-in-out infinite;
+        }
+
+        @keyframes moonFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .sun {
+            width: 100px;
+            height: 100px;
+            background: url('images/sun.png') center/contain no-repeat;
+            top: 8%;
+            left: 8%;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: sunPulse 6s ease-in-out infinite;
+        }
+
+        @keyframes sunPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        body.day-mode .moon {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+
+        body.day-mode .sun {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Moving Clouds - Day Only */
+        .clouds-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+
+        body.day-mode .clouds-container {
+            opacity: 1;
+        }
+
+        .cloud {
+            position: absolute;
+            background: url('images/cloud.png') center/contain no-repeat;
+            opacity: 0.8;
+            filter: brightness(1.2);
+        }
+
+        .cloud-1 {
+            width: 200px;
+            height: 100px;
+            top: 15%;
+            left: -200px;
+            animation: cloudFloat1 40s linear infinite;
+            animation-delay: 0s;
+        }
+
+        .cloud-2 {
+            width: 150px;
+            height: 75px;
+            top: 25%;
+            left: -150px;
+            animation: cloudFloat2 35s linear infinite;
+            animation-delay: 5s;
+        }
+
+        .cloud-3 {
+            width: 180px;
+            height: 90px;
+            top: 35%;
+            left: -180px;
+            animation: cloudFloat3 45s linear infinite;
+            animation-delay: 10s;
+        }
+
+        .cloud-4 {
+            width: 120px;
+            height: 60px;
+            top: 45%;
+            left: -120px;
+            animation: cloudFloat4 30s linear infinite;
+            animation-delay: 15s;
+        }
+
+        .cloud-5 {
+            width: 160px;
+            height: 80px;
+            top: 55%;
+            left: -160px;
+            animation: cloudFloat5 50s linear infinite;
+            animation-delay: 20s;
+        }
+
+        @keyframes cloudFloat1 {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(100vw) translateY(10px); }
+            100% { transform: translateX(200vw) translateY(0); }
+        }
+
+        @keyframes cloudFloat2 {
+            0% { transform: translateX(0) translateY(5px); }
+            50% { transform: translateX(100vw) translateY(-5px); }
+            100% { transform: translateX(200vw) translateY(5px); }
+        }
+
+        @keyframes cloudFloat3 {
+            0% { transform: translateX(0) translateY(-3px); }
+            50% { transform: translateX(100vw) translateY(8px); }
+            100% { transform: translateX(200vw) translateY(-3px); }
+        }
+
+        @keyframes cloudFloat4 {
+            0% { transform: translateX(0) translateY(7px); }
+            50% { transform: translateX(100vw) translateY(-2px); }
+            100% { transform: translateX(200vw) translateY(7px); }
+        }
+
+        @keyframes cloudFloat5 {
+            0% { transform: translateX(0) translateY(-5px); }
+            50% { transform: translateX(100vw) translateY(12px); }
+            100% { transform: translateX(200vw) translateY(-5px); }
+        }
+
+        /* Ghosts - Night Only */
+        .ghosts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 2s ease;
+        }
+
+        body.day-mode .ghosts-container {
+            opacity: 0;
+        }
+
+        .ghost {
+            position: absolute;
+            background: url('images/ghost.png') center/contain no-repeat;
+            opacity: 0.6;
+            filter: drop-shadow(0 0 15px rgba(180, 160, 220, 0.8));
+        }
+
+        .ghost-1 {
+            width: 80px;
+            height: 100px;
+            top: 20%;
+            left: 10%;
+            animation: ghostFloat1 15s ease-in-out infinite;
+        }
+
+        .ghost-2 {
+            width: 60px;
+            height: 75px;
+            top: 60%;
+            left: 80%;
+            animation: ghostFloat2 18s ease-in-out infinite;
+            animation-delay: 2s;
+        }
+
+        .ghost-3 {
+            width: 70px;
+            height: 90px;
+            top: 40%;
+            left: 70%;
+            animation: ghostFloat3 20s ease-in-out infinite;
+            animation-delay: 4s;
+        }
+
+        .ghost-4 {
+            width: 90px;
+            height: 110px;
+            top: 70%;
+            left: 20%;
+            animation: ghostFloat4 16s ease-in-out infinite;
+            animation-delay: 6s;
+        }
+
+        .ghost-5 {
+            width: 50px;
+            height: 65px;
+            top: 30%;
+            left: 40%;
+            animation: ghostFloat5 22s ease-in-out infinite;
+            animation-delay: 8s;
+        }
+
+        @keyframes ghostFloat1 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+            25% { transform: translate(50px, -30px) scale(1.1); opacity: 0.7; }
+            50% { transform: translate(100px, 20px) scale(0.9); opacity: 0.5; }
+            75% { transform: translate(30px, -40px) scale(1.05); opacity: 0.6; }
+        }
+
+        @keyframes ghostFloat2 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+            25% { transform: translate(-40px, 25px) scale(0.95); opacity: 0.7; }
+            50% { transform: translate(-80px, -15px) scale(1.1); opacity: 0.4; }
+            75% { transform: translate(-20px, 35px) scale(0.9); opacity: 0.6; }
+        }
+
+        @keyframes ghostFloat3 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+            25% { transform: translate(60px, -20px) scale(1.05); opacity: 0.8; }
+            50% { transform: translate(30px, 40px) scale(0.95); opacity: 0.5; }
+            75% { transform: translate(80px, -10px) scale(1.1); opacity: 0.7; }
+        }
+
+        @keyframes ghostFloat4 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+            25% { transform: translate(-30px, 45px) scale(0.9); opacity: 0.7; }
+            50% { transform: translate(-60px, -25px) scale(1.1); opacity: 0.4; }
+            75% { transform: translate(-10px, 35px) scale(0.95); opacity: 0.6; }
+        }
+
+        @keyframes ghostFloat5 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+            25% { transform: translate(40px, -35px) scale(1.15); opacity: 0.6; }
+            50% { transform: translate(70px, 15px) scale(0.85); opacity: 0.3; }
+            75% { transform: translate(20px, -25px) scale(1.05); opacity: 0.5; }
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: linear-gradient(135deg, rgba(40, 20, 40, 0.7) 0%, rgba(25, 10, 25, 0.8) 100%);
+            border-bottom: 2px solid var(--accent-gold-dark);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 100;
+            transition: all 2s ease;
+        }
+
+        body.day-mode header {
+            background: linear-gradient(135deg, rgba(70, 130, 180, 0.7) 0%, rgba(135, 206, 235, 0.8) 100%);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light), var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 2px;
+        }
+
+        /* Right side buttons */
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 2px;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .btn:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, rgba(42, 26, 42, 0.8), rgba(26, 15, 26, 0.9));
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold-dark);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, rgba(139, 105, 20, 0.8), rgba(101, 67, 33, 0.9));
+            color: #fff8dc;
+            border: 1px solid var(--accent-gold);
+        }
+
+        /* User Manual Button - Centered in header */
+        .btn-manual {
+            background: linear-gradient(135deg, rgba(80, 50, 80, 0.9), rgba(60, 35, 60, 0.95));
+            color: var(--accent-gold-light);
+            border: 1px solid var(--accent-gold);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .btn-manual:hover {
+            background: linear-gradient(135deg, rgba(90, 60, 90, 1), rgba(70, 45, 70, 1));
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 6px 18px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 80px 5%;
+            max-width: 900px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-header {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .premium-art {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 40px;
+            background: linear-gradient(135deg, rgba(40, 20, 40, 0.6), rgba(25, 10, 25, 0.7));
+            border: 2px solid var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light), var(--accent-gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Cinzel', serif;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 35px;
+            color: var(--text-primary);
+            line-height: 1.6;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Horizontal Flip Cards Section */
+        .content-section {
+            padding: 100px 5%;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.05));
+            position: relative;
+            z-index: 5;
+        }
+
+        .horizontal-cards {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .flip-card {
+            background: transparent;
+            width: 300px;
+            height: 450px;
+            perspective: 1000px;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .flip-card-front {
+            background: linear-gradient(135deg, rgba(50, 25, 50, 0.7) 0%, rgba(30, 15, 30, 0.8) 100%);
+            border: 2px solid var(--accent-gold-dark);
+        }
+
+        .flip-card-front::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), var(--accent-gold-dark), var(--accent-gold), transparent);
+        }
+
+        .flip-card-back {
+            background: linear-gradient(135deg, rgba(60, 30, 60, 0.7) 0%, rgba(40, 20, 40, 0.8) 100%);
+            border: 2px solid var(--accent-gold);
+            transform: rotateY(180deg);
+            text-align: center;
+        }
+
+        .flip-card-back::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold-light), var(--accent-gold), var(--accent-gold-light), transparent);
+        }
+
+        body.day-mode .flip-card-front {
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.7) 0%, rgba(70, 130, 180, 0.8) 100%);
+            border: 2px solid #ffd700;
+        }
+
+        body.day-mode .flip-card-back {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 140, 0, 0.2) 100%);
+            border: 2px solid #ffd700;
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 25px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(184, 134, 11, 0.3));
+            border: 2px solid var(--accent-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .flip-card h3 {
+            color: var(--accent-gold-light);
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-family: 'Cinzel', serif;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Improved Text Colors for Better Readability */
+        .flip-card-front p {
+            color: var(--text-light);
+            line-height: 1.6;
+            font-size: 1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        .flip-card-back p {
+            color: var(--text-light);
+            line-height: 1.6;
+            font-size: 1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+            font-weight: 500;
+        }
+
+        body.day-mode .flip-card-front h3,
+        body.day-mode .flip-card-back h3 {
+            color: var(--text-dark);
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+        }
+
+        body.day-mode .flip-card-front p,
+        body.day-mode .flip-card-back p {
+            color: var(--text-dark);
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+        }
+
+        .flip-tip {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .flip-card:hover .flip-tip {
+            opacity: 0;
+        }
+
+        /* Additional Content */
+        .additional-content {
+            padding: 80px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .additional-content h2 {
+            font-size: 2.2rem;
+            margin-bottom: 40px;
+            color: var(--accent-gold);
+            font-family: 'Cinzel', serif;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(50, 25, 50, 0.6) 0%, rgba(30, 15, 30, 0.7) 100%);
+            border: 1px solid var(--accent-gold-dark);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--accent-gold-light);
+            font-family: 'Cinzel', serif;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        body.day-mode .feature-card {
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.6) 0%, rgba(70, 130, 180, 0.7) 100%);
+            border: 1px solid #ffd700;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 25px 5%;
+            background: linear-gradient(135deg, rgba(25, 10, 25, 0.7) 0%, rgba(15, 5, 15, 0.8) 100%);
+            border-top: 1px solid var(--accent-gold-dark);
+            backdrop-filter: blur(5px);
+        }
+
+        footer p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+        }
+
+        /* Scroll Progress */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-gold-dark), var(--accent-gold), var(--accent-gold-dark));
+            transform-origin: left;
+            transform: scaleX(0);
+            z-index: 1000;
+            transition: transform 0.1s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .horizontal-cards {
+                gap: 25px;
+            }
+            
+            .flip-card {
+                width: 280px;
+                height: 420px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .logo h1 {
+                font-size: 1.6rem;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.75rem;
+            }
+            
+            .btn-manual {
+                position: static;
+                transform: none;
+                margin: 0 auto;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px 5%;
+            }
+            
+            .logo {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .auth-buttons {
+                margin-left: 0;
+                justify-content: center;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h2 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .horizontal-cards {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .flip-card {
+                width: 100%;
+                max-width: 350px;
+                height: 400px;
+            }
+            
+            .cloud, .ghost {
+                transform: scale(0.7);
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.7rem;
+            }
+            
+            .logo h1 {
+                font-size: 1.5rem;
+                text-align: center;
+            }
+            
+            .auth-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .btn-manual {
+                order: -1;
+                width: 100%;
+                max-width: 200px;
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .auth-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+            }
+            
+            .btn-manual {
+                width: 100%;
+                max-width: 250px;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+                padding: 10px;
+            }
+            
+            .logo h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Scroll Progress Bar -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <!-- Forest Background -->
+    <div class="forest-background" id="forestBackground"></div>
+
+    <!-- Trees Container -->
+    <div class="trees-container" id="treesContainer"></div>
+
+    <!-- Celestial Elements -->
+    <div class="celestial-container">
+        <div class="moon"></div>
+        <div class="sun"></div>
+    </div>
+
+    <!-- Moving Clouds - Day Only -->
+    <div class="clouds-container">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+        <div class="cloud cloud-4"></div>
+        <div class="cloud cloud-5"></div>
+    </div>
+
+    <!-- Ghosts - Night Only -->
+    <div class="ghosts-container">
+        <div class="ghost ghost-1"></div>
+        <div class="ghost ghost-2"></div>
+        <div class="ghost ghost-3"></div>
+        <div class="ghost ghost-4"></div>
+        <div class="ghost ghost-5"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <h1>RPG Goal Getter</h1>
+        </div>
+        
+        <!-- User Manual Button - Centered -->
+        <button class="btn btn-manual" id="manualBtn">
+            <i class="fas fa-scroll"></i> USER MANUAL
+        </button>
+        
+        <!-- Right side buttons -->
+        <div class="auth-buttons">
+            <button class="btn btn-login" id="loginBtn">
+                <i class="fas fa-dragon"></i> LOGIN
+            </button>
+            <button class="btn btn-register" id="registerBtn">
+                <i class="fas fa-crown"></i> BEGIN QUEST
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="heroSection">
+        <div class="premium-art">⚔️</div>
+        <h2>Forge Your Destiny Through Daily Deeds</h2>
+        <p>
+            "The mightiest quests are conquered not in single battles, but through the disciplined pursuit of daily goals. 
+            Transform your ambitions into legendary achievements with our enchanted goal-tracking system."
+        </p>
+        <button class="btn btn-register" id="heroRegisterBtn">
+            <i class="fas fa-gem"></i> START YOUR QUEST
+        </button>
+    </section>
+
+    <!-- Horizontal Flip Cards Section -->
+    <section class="content-section" id="contentSection">
+        <div class="horizontal-cards">
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <div class="card-icon">🏹</div>
+                        <h3>Quest Master System</h3>
+                        <p>Transform daily tasks into epic adventures with our magical quest tracking</p>
+                        <p class="flip-tip">Hover to reveal details</p>
+                    </div>
+                    <div class="flip-card-back">
+                        <h3>Quest Master System</h3>
+                        <p>Turn mundane chores into legendary quests! Each completed task earns you experience points, gold rewards, and magical items. Level up your character, unlock special abilities, and watch your hero grow stronger with every accomplishment.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <div class="card-icon">📜</div>
+                        <h3>Magic Scroll Library</h3>
+                        <p>Access ancient knowledge and powerful productivity spells</p>
+                        <p class="flip-tip">Hover to reveal details</p>
+                    </div>
+                    <div class="flip-card-back">
+                        <h3>Magic Scroll Library</h3>
+                        <p>Discover ancient scrolls filled with wisdom! Learn focus enchantments, time management spells, and motivation potions. Each scroll contains proven techniques to enhance your productivity and keep you on track.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <div class="card-icon">🏰</div>
+                        <h3>Guild Alliance Network</h3>
+                        <p>Join forces with fellow adventurers in epic guilds</p>
+                        <p class="flip-tip">Hover to reveal details</p>
+                    </div>
+                    <div class="flip-card-back">
+                        <h3>Guild Alliance Network</h3>
+                        <p>Become part of legendary guilds! Team up with other goal-getters, participate in weekly challenges, and climb the leaderboards. Share strategies and celebrate victories together.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <div class="card-icon">🔮</div>
+                        <h3>Crystal Vision Analytics</h3>
+                        <p>See your progress with magical insights and predictions</p>
+                        <p class="flip-tip">Hover to reveal details</p>
+                    </div>
+                    <div class="flip-card-back">
+                        <h3>Crystal Vision Analytics</h3>
+                        <p>Peer into the future with our magical analytics! The crystal ball reveals your progress patterns, predicts completion times, and identifies your most productive hours.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Additional Content Section -->
+    <section class="additional-content">
+        <h2>Unleash Your Inner Hero</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Armor of Accountability</h3>
+                <p>Protect your progress with our accountability system that keeps you on track even when motivation wanes.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-trophy"></i>
+                <h3>Achievement Hall</h3>
+                <p>Showcase your accomplishments in a grand hall of achievements that grows with every completed goal.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-hourglass-half"></i>
+                <h3>Time Warp Focus</h3>
+                <p>Enhance your focus with our time management spells that help you accomplish more in less time.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-magic"></i>
+                <h3>Enchantment Rituals</h3>
+                <p>Create powerful daily rituals that transform ordinary habits into magical routines.</p>
+            </div>
+        </div>
+        
+        <h2>Join Thousands of Adventurers</h2>
+        <p style="max-width: 800px; margin: 0 auto 40px; font-size: 1.1rem;">
+            "Since beginning my quest with RPG Goal Getter, I've completed more in three months than I did in the previous year. 
+            The gamification makes productivity feel like an adventure!" - Elara, Level 42 Mage
+        </p>
+        
+        <button class="btn btn-register" style="font-size: 1.1rem; padding: 15px 30px;">
+            <i class="fas fa-dragon"></i> EMBARK ON YOUR EPIC JOURNEY
+        </button>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p><i class="fas fa-scroll"></i> © 2023 RPG GOAL GETTER - WHERE LEGENDS ARE FORGED <i class="fas fa-dragon"></i></p>
+    </footer>
+
+    <script>
+        // Custom Cursor Logic
+        const cursor = document.querySelector('.cursor');
+        const cursorFollower = document.querySelector('.cursor-follower');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            setTimeout(() => {
+                cursorFollower.style.left = e.clientX + 'px';
+                cursorFollower.style.top = e.clientY + 'px';
+            }, 100);
+        });
+        
+        document.addEventListener('click', (e) => {
+            // Add click animation to cursor
+            cursor.classList.add('clicked');
+            setTimeout(() => {
+                cursor.classList.remove('clicked');
+            }, 300);
+            
+            // Create click effect
+            const clickEffect = document.createElement('div');
+            clickEffect.className = 'click-effect';
+            clickEffect.style.left = e.clientX + 'px';
+            clickEffect.style.top = e.clientY + 'px';
+            document.body.appendChild(clickEffect);
+            
+            // Remove effect after animation
+            setTimeout(() => {
+                clickEffect.remove();
+            }, 600);
+        });
+
+        // Forest Scroll Animation
+        const forestBackground = document.getElementById('forestBackground');
+        let lastScrollY = window.scrollY;
+        let isScrollingUp = false;
+
+        function handleForestScroll() {
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            
+            // Determine scroll direction
+            isScrollingUp = scrollY < lastScrollY;
+            lastScrollY = scrollY;
+            
+            // Calculate scroll percentage (0 to 1)
+            const maxScroll = documentHeight - windowHeight;
+            const scrollPercent = scrollY / maxScroll;
+            
+            // Forest appears when scrolling up and near the top
+            if (isScrollingUp && scrollPercent < 0.3) {
+                forestBackground.classList.add('active');
+            } else if (scrollPercent > 0.5) {
+                forestBackground.classList.remove('active');
+            }
+            
+            // Update progress bar
+            const scrollProgress = document.getElementById('scrollProgress');
+            scrollProgress.style.transform = `scaleX(${scrollPercent})`;
+            
+            // Day/Night transition based on hero section
+            const heroSection = document.getElementById('heroSection');
+            const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+            const dayTransitionStart = heroBottom - windowHeight * 0.7;
+            const dayTransitionEnd = heroBottom - windowHeight * 0.3;
+            
+            let dayProgress = 0;
+            if (scrollY > dayTransitionStart) {
+                dayProgress = Math.min(1, (scrollY - dayTransitionStart) / (dayTransitionEnd - dayTransitionStart));
+            }
+            
+            // Toggle day mode
+            if (dayProgress > 0.5) {
+                document.body.classList.add('day-mode');
+            } else {
+                document.body.classList.remove('day-mode');
+            }
+            
+            // Tree growth based on scroll percentage - Fully grown only at the end
+            updateTreeGrowth(scrollPercent);
+        }
+
+        // Tree layout configuration - Bigger trees
+        const treeLayout = [
+            { left: 2, width: 180, height: 270, baseScale: 0.2 },
+            { left: 10, width: 220, height: 330, baseScale: 0.15 },
+            { left: 18, width: 160, height: 240, baseScale: 0.25 },
+            { left: 26, width: 200, height: 300, baseScale: 0.18 },
+            { left: 34, width: 240, height: 360, baseScale: 0.12 },
+            { left: 42, width: 190, height: 285, baseScale: 0.22 },
+            { left: 50, width: 210, height: 315, baseScale: 0.16 },
+            { left: 58, width: 170, height: 255, baseScale: 0.24 },
+            { left: 66, width: 230, height: 345, baseScale: 0.14 },
+            { left: 74, width: 150, height: 225, baseScale: 0.28 },
+            { left: 82, width: 200, height: 300, baseScale: 0.2 },
+            { left: 90, width: 180, height: 270, baseScale: 0.22 },
+            { left: 98, width: 140, height: 210, baseScale: 0.3 }
+        ];
+
+        // Create trees
+        function createTrees() {
+            const treesContainer = document.getElementById('treesContainer');
+            
+            treeLayout.forEach((treeData, index) => {
+                const tree = document.createElement('div');
+                tree.className = 'tree';
+                tree.style.width = `${treeData.width}px`;
+                tree.style.height = `${treeData.height}px`;
+                tree.style.left = `${treeData.left}%`;
+                
+                // Set initial state - very small
+                tree.style.transform = `scale(${treeData.baseScale})`;
+                tree.style.opacity = '0';
+                
+                treesContainer.appendChild(tree);
+            });
+        }
+
+        // Update tree growth based on scroll percentage
+        function updateTreeGrowth(scrollPercent) {
+            const trees = document.querySelectorAll('.tree');
+            
+            trees.forEach((tree, index) => {
+                const treeData = treeLayout[index];
+                if (treeData) {
+                    // Trees only start growing after 50% scroll, fully grown at 100%
+                    let growthProgress = 0;
+                    if (scrollPercent > 0.5) {
+                        growthProgress = (scrollPercent - 0.5) * 2; // Map 0.5-1.0 to 0.0-1.0
+                    }
+                    
+                    // Calculate final scale (baseScale to 1.0)
+                    const targetScale = treeData.baseScale + ((1 - treeData.baseScale) * growthProgress);
+                    
+                    // Apply growth transformation
+                    tree.style.transform = `scale(${targetScale})`;
+                    
+                    // Update opacity based on growth progress
+                    tree.style.opacity = growthProgress.toString();
+                }
+            });
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            createTrees();
+            handleForestScroll(); // Initial call
+        });
+
+        window.addEventListener('scroll', handleForestScroll);
+        window.addEventListener('resize', handleForestScroll);
+
+        // Button functionality
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            window.location.href = 'login.php';
+        });
+
+        document.getElementById('registerBtn').addEventListener('click', () => {
+            window.location.href = 'register.php';
+        });
+
+        document.getElementById('heroRegisterBtn').addEventListener('click', () => {
+            window.location.href = 'login.php';
+        });
+
+        // User Manual Button functionality - Fixed to go to manual.php
+        document.getElementById('manualBtn').addEventListener('click', () => {
+            window.location.href = 'manual.php';
+        });
+    </script>
+</body>
+</html>
